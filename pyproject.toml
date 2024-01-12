@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "pipen-poplog"
+version = "0.0.0"
+description = "Populate logs from jobs to running log of the pipeline"
+authors = ["pwwang <pwwang@pwwang.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/pwwang/pipen-poplog"
+repository = "https://github.com/pwwang/pipen-poplog"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pipen = "^0.13"
+
+[tool.poetry.build]
+generate-setup-file = true
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.masonry.api"
+
+[tool.poetry.plugins.pipen]
+log2file = "pipen_poplog:poplog_plugin"
+
+[tool.mypy]
+ignore_missing_imports = true
+allow_redefinition = true
+disable_error_code = ["attr-defined", "no-redef"]
+show_error_codes = true
+strict_optional = false
+
+[tool.black]
+line-length = 88
+target-version = ['py37', 'py38', 'py39', 'py310']
+include = '\.pyi?$'
