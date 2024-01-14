@@ -1,6 +1,6 @@
 # pipen-poplog
 
-Populate logs from jobs to running log of the pipeline
+Populate logs from jobs to running log of the pipeline for [pipen][1].
 
 ## Installation
 
@@ -56,3 +56,6 @@ if __name__ == "__main__":
 - `plugin_opts.poplog_jobs`: The job indices to be populated. Default: `[0]` (the first job).
 - `plugin_opts.poplog_max`: The max number of the log message to be poplutated for each job. Default: `99`.
 - `plugin_opts.poplog_source`: The source of the log message. Default: `stdout`.
+
+
+[1]: https://github.com/pwwang/pipen
