@@ -24,13 +24,17 @@ class PoplogStderrLimitJobs(Proc):
       echo -n "[POPLOG][INFO] Log message " >&2
       echo "by {{in.var}} 1" >&2
       echo "[POPLOG][DEBUG] Log message by {{in.var}} 2" >&2
-      echo "[POPLOG][INFO] Log message by {{in.var}} 3"
+      echo "[POPLOG][INFO] Log message by {{in.var}} 3" >&2
+      echo "[POPLOG][INFO] Log message by {{in.var}} 4" >&2
+      echo "[POPLOG][INFO] Log message by {{in.var}} 5" >&2
+      echo "[POPLOG][INFO] Log message by {{in.var}} 6"
     """
     plugin_opts = {
         "poplog_jobs": [0, 1],
         "poplog_loglevel": "warning",
         "poplog_source": "stderr",
         "poplog_pattern": r'^\[POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)$',
+        "poplog_max": 6,
     }
 
 
@@ -49,6 +53,7 @@ class PoplogError(Proc):
 
 class Pipeline(Pipen):
     cache = False
+    forks = 3
     starts = PoplogDefault, PoplogStderrLimitJobs, PoplogError
 
 

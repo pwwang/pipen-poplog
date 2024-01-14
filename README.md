@@ -54,7 +54,7 @@ if __name__ == "__main__":
 - `plugin_opts.poplog_loglevel`: The log level for poplog. Default: `info`.
 - `plugin_opts.poplog_pattern`: The pattern to match the log message. Default: `r'\[PIPEN-POPLOG\]\[(?P<level>\w+)\] (?P<message>.*)'`.
 - `plugin_opts.poplog_jobs`: The job indices to be populated. Default: `[0]` (the first job).
-- `plugin_opts.poplog_max`: The max number of the log message to be poplutated for each job. Default: `99`.
+- `plugin_opts.poplog_max`: The total max number of the log message to be poplutated. Default: `99`.
 - `plugin_opts.poplog_source`: The source of the log message. Default: `stdout`.
 
 
