@@ -120,7 +120,11 @@ class PipenPoplogPlugin:
 
     @plugin.impl
     async def on_job_failed(self, proc: Proc, job: Job):
-        self._poplog(proc, job, end=True)
+        try:
+            self._poplog(proc, job, end=True)
+        except FileNotFoundError:
+            # In case the file is not there
+            pass
 
     @plugin.impl
     async def on_proc_done(self, proc: Proc, succeeded: bool | str):
