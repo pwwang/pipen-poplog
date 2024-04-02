@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import re
+import logging
 from pipen.pluginmgr import plugin
 from pipen.utils import get_logger
 
@@ -28,10 +29,10 @@ class PipenPoplogPlugin:
         self.count = 0
 
     def _stop_populating(self, poplog_max: int, job: Job, limit: int) -> bool:
-        if self.count > poplog_max + 1:
+        if self.count > poplog_max:
             return True
 
-        if self.count == poplog_max + 1:
+        if self.count == poplog_max:
             job.log(
                 "warning",
                 "Poplog reached max (%s), stop populating",
@@ -50,6 +51,7 @@ class PipenPoplogPlugin:
 
         poplog_max = proc.plugin_opts.get("poplog_max", 99)
         poplog_jobs = proc.plugin_opts.get("poplog_jobs", [0])
+
         limit = max(poplog_jobs) + 1
         if self._stop_populating(poplog_max, job, limit):
             return
@@ -84,7 +86,10 @@ class PipenPoplogPlugin:
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
             job.log(level, msg, limit=limit, limit_indicator=False, logger=logger)
-            self.count += 1
+            # count only when level is larger than poplog_loglevel
+            levelno = logging.getLevelName(level.upper())
+            if not isinstance(levelno, int) or levelno >= logger.getEffectiveLevel():
+                self.count += 1
 
             if self._stop_populating(poplog_max, job, limit):
                 return
