@@ -45,7 +45,8 @@ class PipenPoplogPlugin:
             return True
         return False
 
-    def _poplog(self, proc: Proc, job: Job, end: bool = False):
+    def _poplog(self, job: Job, end: bool = False):
+        proc = job.proc
         if job.index not in proc.plugin_opts.poplog_jobs:
             return
 
@@ -110,23 +111,23 @@ class PipenPoplogPlugin:
         logger.setLevel(pipen.config.plugin_opts.poplog_loglevel.upper())
 
     @plugin.impl
-    async def on_job_polling(self, proc: Proc, job: Job):
-        if proc.plugin_opts.poplog_source == "stdout":
+    async def on_job_polling(self, job: Job):
+        if job.proc.plugin_opts.poplog_source == "stdout":
             source = job.stdout_file
         else:
             source = job.stderr_file
 
         if source.exists():
-            self._poplog(proc, job)
+            self._poplog(job)
 
     @plugin.impl
-    async def on_job_succeeded(self, proc: Proc, job: Job):
-        self._poplog(proc, job, end=True)
+    async def on_job_succeeded(self, job: Job):
+        self._poplog(job, end=True)
 
     @plugin.impl
-    async def on_job_failed(self, proc: Proc, job: Job):
+    async def on_job_failed(self, job: Job):
         try:
-            self._poplog(proc, job, end=True)
+            self._poplog(job, end=True)
         except FileNotFoundError:
             # In case the file is not there
             pass
