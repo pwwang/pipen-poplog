@@ -66,7 +66,7 @@ class PipenPoplogPlugin:
             source = job.stderr_file
 
         if job.index not in self.handlers:
-            self.handlers[job.index] = open(source, "r")
+            self.handlers[job.index] = source.open()
             self.residules[job.index] = ""
 
         handler = self.handlers[job.index]
@@ -75,10 +75,12 @@ class PipenPoplogPlugin:
         content = residue + handler.read()
         has_residue = content.endswith("\n")
         lines = content.splitlines()
+
         if has_residue or not lines:
             self.residules[job.index] = ""
         else:
             self.residules[job.index] = lines.pop(-1)
+
         for line in lines:
             match = poplog_pattern.match(line)
             if not match:

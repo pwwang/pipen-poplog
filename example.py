@@ -1,8 +1,10 @@
+import sys
 from pipen import Proc, Pipen
 
 
 class PoplogDefault(Proc):
     """A default poplog proc"""
+
     input = "var:var"
     input_data = [0, 1, 2]
     script = """
@@ -18,6 +20,7 @@ class PoplogDefault(Proc):
 
 class PoplogStderrLimitJobs(Proc):
     """A default poplog proc"""
+
     input = "var:var"
     input_data = [0, 1, 2]
     script = """
@@ -33,13 +36,14 @@ class PoplogStderrLimitJobs(Proc):
         "poplog_jobs": [0, 1],
         "poplog_loglevel": "warning",
         "poplog_source": "stderr",
-        "poplog_pattern": r'^\[POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)$',
+        "poplog_pattern": r"^\[POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)$",
         "poplog_max": 6,
     }
 
 
 class PoplogError(Proc):
     """A default poplog proc"""
+
     input = "var:var"
     input_data = [0, 1, 2]
     script = """
@@ -58,4 +62,11 @@ class Pipeline(Pipen):
 
 
 if __name__ == "__main__":
-    Pipeline().run()
+    if len(sys.argv) > 1 and sys.argv[1] == "--cloud":
+        from dotenv import load_dotenv
+
+        load_dotenv()
+        BUCKET = "gs://handy-buffer-287000.appspot.com"
+        Pipeline(workdir=f"{BUCKET}/pipen-poplog-example").run()
+    else:
+        Pipeline().run()
