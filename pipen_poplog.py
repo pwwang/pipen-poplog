@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from pipen import Pipen, Proc
     from pipen.job import Job
 
-__version__ = "0.3.0a1"
+__version__ = "0.3.0"
 PATTERN = r'\[PIPEN-POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)'
 logger = get_logger("poplog")
 levels = {"warn": "warning"}
