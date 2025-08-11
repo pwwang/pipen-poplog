@@ -11,7 +11,7 @@ pip install -U pipen-poplog
 ## Enabling/Disabling the plugin
 
 The plugin is registered via entrypoints. It's by default enabled. To disable it:
-`plugins=[..., "no:log2file"]`, or uninstall this plugin.
+`plugins=[..., "no:poplog"]`, or uninstall this plugin.
 
 ## Usage
 
