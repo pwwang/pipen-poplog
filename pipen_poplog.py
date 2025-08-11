@@ -21,6 +21,8 @@ levels = {"warn": "warning"}
 class PipenPoplogPlugin:
     """Populate logs from stdout/stderr to pipen runnning logs"""
     name = "poplog"
+    priority = -9  # wrap command before runinfo plugin
+
     __version__: str = __version__
     __slots__ = ("handlers", "residules", "count")
 
@@ -149,6 +151,11 @@ class PipenPoplogPlugin:
         self.handlers.clear()
         self.residules.clear()
         self.count = 0
+
+    @plugin.impl
+    def on_jobcmd_prep(job: Job) -> str:
+        # let the script flush each newline
+        return '# by pipen_poplog\ncmd="stdbuf -oL $cmd"'
 
 
 poplog_plugin = PipenPoplogPlugin()
