@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import re
 import logging
+from yunpath import CloudPath
 from pipen.pluginmgr import plugin
 from pipen.utils import get_logger
 
@@ -118,6 +119,9 @@ class PipenPoplogPlugin:
             source = job.stdout_file
         else:
             source = job.stderr_file
+
+        if isinstance(source, CloudPath):
+            source._refresh_cache()
 
         if source.exists():
             self._poplog(job)
