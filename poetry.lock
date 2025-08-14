@@ -308,14 +308,14 @@ grpc = ["grpcio (>=1.38.0,<2.0dev)", "grpcio-status (>=1.38.0,<2.0.dev0)"]
 
 [[package]]
 name = "google-cloud-storage"
-version = "3.2.0"
+version = "3.3.0"
 description = "Google Cloud Storage API client library"
 optional = false
 python-versions = ">=3.7"
 groups = ["examples"]
 files = [
-    {file = "google_cloud_storage-3.2.0-py3-none-any.whl", hash = "sha256:ff7a9a49666954a7c3d1598291220c72d3b9e49d9dfcf9dfaecb301fc4fb0b24"},
-    {file = "google_cloud_storage-3.2.0.tar.gz", hash = "sha256:decca843076036f45633198c125d1861ffbf47ebf5c0e3b98dcb9b2db155896c"},
+    {file = "google_cloud_storage-3.3.0-py3-none-any.whl", hash = "sha256:0338ecd6621b3ecacb108f1cf7513ff0d1bca7f1ff4d58e0220b59f3a725ff23"},
+    {file = "google_cloud_storage-3.3.0.tar.gz", hash = "sha256:ae9d891d53e17d9681d7c4ef1ffeea0cde9bdc53d5b64fa6ff6bf30d1911cf61"},
 ]
 
 [package.dependencies]
@@ -872,14 +872,14 @@ executing = ">=2.0,<3.0"
 
 [[package]]
 name = "pipen"
-version = "0.17.11"
+version = "0.17.13"
 description = "A pipeline framework for python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "pipen-0.17.11-py3-none-any.whl", hash = "sha256:60c44c12569b47c3ee5177d07c15ead44880625d007eac78c1c0b5d536b8cac5"},
-    {file = "pipen-0.17.11.tar.gz", hash = "sha256:c46d57590e4ec00d97552110d3102435da6709e0e78140a86a5dde6e9809d7f4"},
+    {file = "pipen-0.17.13-py3-none-any.whl", hash = "sha256:6ba4e11d34db18d6b115aed8c71bb4858f6342bf497418400540623c4f94764f"},
+    {file = "pipen-0.17.13.tar.gz", hash = "sha256:335803a538f3e3877b3c6beba93390fdb26f73f38f6690552ffa9a730a742d1c"},
 ]
 
 [package.dependencies]
@@ -1378,14 +1378,14 @@ files = [
 
 [[package]]
 name = "xqute"
-version = "0.10.3"
+version = "0.10.4"
 description = "A job management system for python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "xqute-0.10.3-py3-none-any.whl", hash = "sha256:917c262e49b343c1bc9561442ac90d47d5a4b6e850b1ccec99dcb68f501a07dc"},
-    {file = "xqute-0.10.3.tar.gz", hash = "sha256:d33dde00c1ce450ae8c5ea822952987360b5c39ef6f0b15c65b470929ba4f474"},
+    {file = "xqute-0.10.4-py3-none-any.whl", hash = "sha256:47a35b641e0e02b1b7e3142cb9934c7249fcc07b6c1ac38dfefcbd069578feaf"},
+    {file = "xqute-0.10.4.tar.gz", hash = "sha256:bb88931edccf6a1dc55145834c21aab0b4973057e04e4db50ec753a98a990e62"},
 ]
 
 [package.dependencies]

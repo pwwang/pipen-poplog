@@ -116,7 +116,9 @@ class PipenPoplogPlugin:
         logger.setLevel(pipen.config.plugin_opts.poplog_loglevel.upper())
 
     @plugin.impl
-    async def on_job_polling(self, job: Job):
+    async def on_job_polling(self, job: Job, counter: int):
+        """Poll the job's stdout/stderr file and populate the logs"""
+
         if job.proc.plugin_opts.poplog_source == "stdout":
             source = job.stdout_file
         else:
