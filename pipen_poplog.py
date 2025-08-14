@@ -104,11 +104,11 @@ class PipenPoplogPlugin:
     async def on_init(self, pipen: Pipen):
         """Initialize the options"""
         # default options
-        pipen.config.plugin_opts.poplog_loglevel = "info"
-        pipen.config.plugin_opts.poplog_pattern = PATTERN
-        pipen.config.plugin_opts.poplog_jobs = [0]
-        pipen.config.plugin_opts.poplog_source = "stdout"
-        pipen.config.plugin_opts.poplog_max = 99
+        pipen.config.plugin_opts.setdefault("poplog_loglevel", "info")
+        pipen.config.plugin_opts.setdefault("poplog_pattern", PATTERN)
+        pipen.config.plugin_opts.setdefault("poplog_jobs", [0])
+        pipen.config.plugin_opts.setdefault("poplog_source", "stdout")
+        pipen.config.plugin_opts.setdefault("poplog_max", 99)
 
     @plugin.impl
     async def on_start(self, pipen: Pipen):
