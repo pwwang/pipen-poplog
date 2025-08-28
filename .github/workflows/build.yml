@@ -22,7 +22,18 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install poetry
           poetry config virtualenvs.create false
-          poetry install -v
+          poetry install -v --with dev
+      - name: Lint with flake8
+        run: |
+          flake8 pipen_poplog.py
+
+      - name: Type check with mypy
+        run: |
+          mypy -p pipen_poplog
+
+      - name: Run tests with pytest
+        run: |
+          pytest
 
   deploy:
     needs: build

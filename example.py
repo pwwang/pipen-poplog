@@ -27,9 +27,9 @@ class PoplogStderrLimitJobs(Proc):
       echo -n "[POPLOG][INFO] Log message " >&2
       echo "by {{in.var}} 1" >&2
       echo "[POPLOG][DEBUG] Log message by {{in.var}} 2" >&2
-      sleep 1
+      sleep 3
       echo "[POPLOG][INFO] Log message by {{in.var}} 3" >&2
-      sleep 1
+      sleep 2
       echo "[POPLOG][INFO] Log message by {{in.var}} 4" >&2
       sleep 1
       echo "[POPLOG][INFO] Log message by {{in.var}} 5" >&2
@@ -41,7 +41,7 @@ class PoplogStderrLimitJobs(Proc):
         "poplog_loglevel": "warning",
         "poplog_source": "stderr",
         "poplog_pattern": r"^\[POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)$",
-        "poplog_max": 6,
+        "poplog_max": 3,
     }
 
 

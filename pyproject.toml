@@ -19,6 +19,13 @@ generate-setup-file = true
 google-cloud-storage = "^3"
 python-dotenv = "^1"
 
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.1"
+pytest-cov = "^6.2.1"
+mypy = "^1.17.1"
+flake8 = "^7.3.0"
+
 [build-system]
 requires = ["poetry>=1.0.0"]
 build-backend = "poetry.masonry.api"
@@ -37,3 +44,11 @@ strict_optional = false
 line-length = 88
 target-version = ['py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
+
+[tool.pytest.ini_options]
+addopts = "-vv --cov-config=.coveragerc --cov=pipen_poplog --cov-report xml:.coverage.xml --cov-report term-missing"
+filterwarnings = [
+    #"error"
+]
+console_output_style = "progress"
+junit_family = "xunit1"
