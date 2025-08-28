@@ -1736,14 +1736,14 @@ files = [
 
 [[package]]
 name = "xqute"
-version = "0.10.8"
+version = "0.10.9"
 description = "A job management system for python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main"]
 files = [
-    {file = "xqute-0.10.8-py3-none-any.whl", hash = "sha256:57b4074cb2a522f2fef2edaf6f52770a7ff2de7701d01c0ab0f23dacc41743ad"},
-    {file = "xqute-0.10.8.tar.gz", hash = "sha256:5a2d14fee8cdd89cdafaf8da419814128ef2e706be9f228d4405d44d5322b4cb"},
+    {file = "xqute-0.10.9-py3-none-any.whl", hash = "sha256:83c506fe0117d2c5de6c9607ca63d31d6cb998a647d5f386ce4a1f22bb0043c7"},
+    {file = "xqute-0.10.9.tar.gz", hash = "sha256:c7194e76fac1cc1b76b718d375f058c41503ea810513aef48978255e525522f3"},
 ]
 
 [package.dependencies]
