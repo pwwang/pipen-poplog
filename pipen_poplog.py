@@ -230,12 +230,12 @@ class PipenPoplogPlugin(metaclass=Singleton):
 
     @plugin.impl
     async def on_job_succeeded(self, job: Job):
-        await self.on_job_polling.impl(self, job, 0)
+        await self.on_job_polling(job, 0)
 
     @plugin.impl
     async def on_job_failed(self, job: Job):
         with suppress(FileNotFoundError):
-            await self.on_job_polling.impl(self, job, 0)
+            await self.on_job_polling(job, 0)
 
     @plugin.impl
     async def on_proc_done(self, proc: Proc, succeeded: bool | str):

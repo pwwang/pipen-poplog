@@ -122,7 +122,7 @@ class TestLogsPopulator:
         populator.logfile = mock_logfile
 
         # First call
-        result1 = populator.populate()
+        result1 = populator.populate()  #
         first_handler = populator.handler
 
         # Second call should reuse handler
