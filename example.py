@@ -14,7 +14,7 @@ class PoplogDefault(Proc):
       sleep 3
       echo "[PIPEN-POPLOG][ERROR] Log message by {{in.var}} 2"
       sleep 3
-      echo "[PIPEN-POPLOG][INFO] Log message by {{in.var}} 3"
+      echo -n "[PIPEN-POPLOG][INFO] Log message by {{in.var}} 3"
     """
 
 

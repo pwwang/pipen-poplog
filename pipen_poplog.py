@@ -159,6 +159,35 @@ class PipenPoplogPlugin(metaclass=Singleton):
     def __init__(self) -> None:
         self.populators: dict[int, LogsPopulator] = {}
 
+    def _clear_residues(self, job: Job) -> None:
+        """Clear residues in all populators"""
+        if job.index not in self.populators:
+            return
+
+        populator = self.populators[job.index]
+        poplog_pattern = re.compile(job.proc.plugin_opts.get("poplog_pattern", PATTERN))
+
+        if populator.residue:
+            line = populator.residue
+            populator.residue = ""
+
+            if populator.max_hit():
+                return
+
+            match = poplog_pattern.match(line)
+            if not match:
+                return
+
+            level = match.group("level").lower()
+            level = levels.get(level, level)
+            msg = match.group("message").rstrip()
+            job.log(level, msg, limit_indicator=False, logger=logger)
+
+            # count only when level is larger than poplog_loglevel
+            levelno = logging._nameToLevel.get(level.upper(), 0)
+            if not isinstance(levelno, int) or levelno >= logger.getEffectiveLevel():
+                populator.increment_counter()
+
     @plugin.impl
     async def on_init(self, pipen: Pipen):
         """Initialize the options"""
@@ -231,11 +260,19 @@ class PipenPoplogPlugin(metaclass=Singleton):
     @plugin.impl
     async def on_job_succeeded(self, job: Job):
         await self.on_job_polling(job, 0)
+        self._clear_residues(job)
 
     @plugin.impl
     async def on_job_failed(self, job: Job):
-        with suppress(FileNotFoundError):
+        with suppress(FileNotFoundError, AttributeError):
             await self.on_job_polling(job, 0)
+        self._clear_residues(job)
+
+    @plugin.impl
+    async def on_job_killed(self, job: Job):
+        with suppress(FileNotFoundError, AttributeError):
+            await self.on_job_polling(job, 0)
+        self._clear_residues(job)
 
     @plugin.impl
     async def on_proc_done(self, proc: Proc, succeeded: bool | str):
