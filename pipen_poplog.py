@@ -185,7 +185,11 @@ class PipenPoplogPlugin(metaclass=Singleton):
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
-            if not isinstance(levelno, int) or levelno >= logger.getEffectiveLevel():
+            base_logger = getattr(logger, "logger", logger)
+            if (
+                not isinstance(levelno, int)
+                or levelno >= base_logger.getEffectiveLevel()
+            ):
                 populator.increment_counter()
 
     @plugin.impl
@@ -251,6 +255,17 @@ class PipenPoplogPlugin(metaclass=Singleton):
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
             job.log(level, msg, limit_indicator=False, logger=logger)
+            # flush all handlers
+            base_logger = getattr(logger, "logger", logger)
+            for h in getattr(base_logger, "handlers", []):
+                with suppress(Exception):
+                    h.flush()
+
+                stream = getattr(h, "stream", None)
+                if stream:
+                    with suppress(Exception):
+                        stream.flush()
+                        stream.flush()
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
