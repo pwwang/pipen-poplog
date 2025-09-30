@@ -122,11 +122,11 @@ class TestLogsPopulator:
         populator.logfile = mock_logfile
 
         # First call
-        result1 = populator.populate()  #
+        result1 = populator.populate()  # noqa: F841
         first_handler = populator.handler
 
         # Second call should reuse handler
-        result2 = populator.populate()
+        result2 = populator.populate()  # noqa: F841
         second_handler = populator.handler
 
         assert first_handler is second_handler
