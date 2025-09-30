@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pipen-poplog"
-version = "0.3.8"
+version = "0.3.9"
 description = "Populate logs from jobs to running log of the pipeline"
 authors = ["pwwang <pwwang@pwwang.com>"]
 license = "MIT"
