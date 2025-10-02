@@ -265,7 +265,6 @@ class PipenPoplogPlugin(metaclass=Singleton):
                 if stream:
                     with suppress(Exception):
                         stream.flush()
-                        stream.flush()
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
