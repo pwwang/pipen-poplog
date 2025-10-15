@@ -162,7 +162,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
 
     def __init__(self) -> None:
         self.populators: dict[int, LogsPopulator] = {}
-        self.flushing_handlers = []
+        self.flushing_handlers: list[logging.Handler] = []
 
     def _clear_residues(self, job: Job) -> None:
         """Clear residues in all populators"""
