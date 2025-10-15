@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
+import os
 import re
 import logging
 from pathlib import Path
@@ -154,10 +155,14 @@ class PipenPoplogPlugin(metaclass=Singleton):
     priority = -9  # wrap command before runinfo plugin
 
     __version__: str = __version__
-    __slots__ = ("populators",)
+    # flushing handlers: The handlers of the logger that need to be flushed
+    # this is to ensure that the logs are written to the file and uploaded if
+    # using cloud files for logging
+    __slots__ = ("populators", "flushing_handlers")
 
     def __init__(self) -> None:
         self.populators: dict[int, LogsPopulator] = {}
+        self.flushing_handlers = []
 
     def _clear_residues(self, job: Job) -> None:
         """Clear residues in all populators"""
@@ -182,6 +187,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
             job.log(level, msg, limit_indicator=False, logger=logger)
+            self._flush_hanlders()
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
@@ -191,6 +197,15 @@ class PipenPoplogPlugin(metaclass=Singleton):
                 or levelno >= base_logger.getEffectiveLevel()
             ):
                 populator.increment_counter()
+
+    def _flush_hanlders(self):
+        if not self.flushing_handlers:
+            return
+
+        for h in self.flushing_handlers:
+            with suppress(Exception):
+                h.stream.flush()
+                os.fsync(h.stream.fileno())
 
     @plugin.impl
     async def on_init(self, pipen: Pipen):
@@ -206,6 +221,22 @@ class PipenPoplogPlugin(metaclass=Singleton):
     async def on_start(self, pipen: Pipen):
         """Set the log level"""
         logger.setLevel(pipen.config.plugin_opts.poplog_loglevel.upper())
+        # Find the handlers to flush, if they are file handlers from a mounted path
+        base_logger = getattr(logger, "logger", logger)
+        for h in getattr(base_logger, "handlers", []):
+            stream = getattr(h, "stream", None)
+            if (
+                not stream
+                or not hasattr(stream, "name")
+                or not isinstance(stream.name, str)
+                # TODO: a better way to check if it is from a mounted path
+                or not (
+                    stream.name.startswith("/mnt") or stream.name.startswith("/mount")
+                )
+            ):
+                continue
+
+            self.flushing_handlers.append(h)
 
     @plugin.impl
     async def on_job_started(self, job: Job):
@@ -251,25 +282,19 @@ class PipenPoplogPlugin(metaclass=Singleton):
             match = poplog_pattern.match(line)
             if not match:
                 continue
+
             level = match.group("level").lower()
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
             job.log(level, msg, limit_indicator=False, logger=logger)
-            # flush all handlers
-            base_logger = getattr(logger, "logger", logger)
-            for h in getattr(base_logger, "handlers", []):
-                with suppress(Exception):
-                    h.flush()
-
-                stream = getattr(h, "stream", None)
-                if stream:
-                    with suppress(Exception):
-                        stream.flush()
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
             if not isinstance(levelno, int) or levelno >= logger.getEffectiveLevel():
                 populator.increment_counter()
+
+        # flush all handlers
+        self._flush_hanlders()
 
     @plugin.impl
     async def on_job_succeeded(self, job: Job):
