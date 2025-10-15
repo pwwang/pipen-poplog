@@ -198,6 +198,78 @@ class PipenPoplogPlugin(metaclass=Singleton):
             ):
                 populator.increment_counter()
 
+    def _is_remote_filesystem(self, path: str) -> bool:
+        """Check if a path is on a remote/network filesystem.
+
+        Remote filesystems may require explicit flushing to ensure data is
+        written promptly. This includes NFS, FUSE-based cloud storage (like
+        GCS, S3), SMB/CIFS, and other network filesystems.
+
+        Args:
+            path: The file path to check
+
+        Returns:
+            True if the path is on a remote/network filesystem
+        """
+        try:
+            # Get the real path to handle symlinks
+            real_path = os.path.realpath(path)
+
+            # Read /proc/mounts to find the filesystem type
+            # This is Linux-specific but works in most environments
+            with open('/proc/mounts', 'r') as f:
+                mounts = f.readlines()
+
+            # Find the best matching mount point (longest match)
+            best_match_fs = None
+            best_match_len = 0
+
+            for line in mounts:
+                parts = line.split()
+                if len(parts) < 3:
+                    continue
+                mount_point = parts[1]
+                fs_type = parts[2]
+
+                # Check if the path starts with this mount point
+                if real_path.startswith(mount_point):
+                    if len(mount_point) > best_match_len:
+                        best_match_fs = fs_type
+                        best_match_len = len(mount_point)
+
+            if not best_match_fs:
+                return False
+
+            # List of filesystem types that are typically remote/network/cloud
+            # and may need explicit flushing
+            remote_fs_types = {
+                'nfs', 'nfs4',  # NFS
+                'cifs', 'smb', 'smbfs',  # SMB/CIFS
+                'fuse', 'fuseblk', 'fusectl',  # FUSE (cloud storage)
+                'gcs', 'gcsfuse',  # Google Cloud Storage
+                's3fs', 's3',  # S3
+                'afs',  # Andrew File System
+                'coda',  # Coda distributed file system
+                'ocfs2',  # Oracle Cluster File System
+                'glusterfs',  # GlusterFS
+                'lustre',  # Lustre
+                'davfs',  # WebDAV
+            }
+
+            # Check exact match
+            if best_match_fs in remote_fs_types:
+                return True
+
+            # Check if it's a FUSE variant (e.g., fuse.s3fs, fuse.gcsfuse)
+            if best_match_fs.startswith('fuse.'):
+                return True
+
+            return False
+        except Exception:
+            # If we can't determine the filesystem type, be conservative
+            # and assume it might be remote if it's under common mount points
+            return path.startswith('/mnt') or path.startswith('/mount')
+
     def _flush_hanlders(self):
         if not self.flushing_handlers:
             return
@@ -221,7 +293,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
     async def on_start(self, pipen: Pipen):
         """Set the log level"""
         logger.setLevel(pipen.config.plugin_opts.poplog_loglevel.upper())
-        # Find the handlers to flush, if they are file handlers from a mounted path
+        # Find handlers to flush if they are file handlers from remote path
         base_logger = getattr(logger, "logger", logger)
         for h in getattr(base_logger, "handlers", []):
             stream = getattr(h, "stream", None)
@@ -229,10 +301,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
                 not stream
                 or not hasattr(stream, "name")
                 or not isinstance(stream.name, str)
-                # TODO: a better way to check if it is from a mounted path
-                or not (
-                    stream.name.startswith("/mnt") or stream.name.startswith("/mount")
-                )
+                or not self._is_remote_filesystem(stream.name)
             ):
                 continue
 
