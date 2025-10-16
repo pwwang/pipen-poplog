@@ -125,12 +125,15 @@ class LogsPopulator:
             return []
 
         if isinstance(self.logfile, CloudPath):
-            self.logfile._refresh_cache()
+            self.logfile._refresh_cache(force_overwrite_from_cloud=True)
 
         if not self.handler:
             self.handler = self.logfile.open()  # type: ignore
 
-        self.handler.flush()
+        if isinstance(self.logfile, CloudPath):
+            # force handler to re-read the file for cloud files
+            # they were downloaded by _refresh_cache
+            self.handler.seek(self.handler.tell())
         content = self.residue + self.handler.read()
         has_residue = content.endswith("\n")
         lines = content.splitlines()

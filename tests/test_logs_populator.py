@@ -190,16 +190,3 @@ class TestLogsPopulator:
         # Should not be able to add arbitrary attributes
         with pytest.raises(AttributeError):
             populator.some_other_attribute = "value"
-
-    def test_handler_flush_called(self):
-        """Test that handler.flush() is called during populate."""
-        mock_logfile = Mock()
-        mock_logfile.exists.return_value = True
-        mock_handler = mock_open(read_data="content\n").return_value
-        mock_logfile.open.return_value = mock_handler
-
-        populator = LogsPopulator()
-        populator.logfile = mock_logfile
-
-        populator.populate()
-        mock_handler.flush.assert_called_once()
