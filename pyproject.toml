@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pipen-poplog"
-version = "0.3.12"
+version = "1.0.0"
 description = "Populate logs from jobs to running log of the pipeline"
 authors = ["pwwang <pwwang@pwwang.com>"]
 license = "MIT"
@@ -27,8 +27,8 @@ mypy = "^1.17.1"
 flake8 = "^7.3.0"
 
 [build-system]
-requires = ["poetry>=1.0.0"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins.pipen]
 poplog = "pipen_poplog:poplog_plugin"
