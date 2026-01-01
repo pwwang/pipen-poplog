@@ -101,7 +101,7 @@ class LogsPopulator:
     ) -> None:
         self.logfile = PanPath(logfile) if isinstance(logfile, str) else logfile
         self.handler = None
-        self.residue = ""
+        self.residue: str = ""
         self.counter = 0
         self.max = max
         self.hit_message = hit_message
@@ -123,18 +123,18 @@ class LogsPopulator:
             self._max_hit = True
             return [self.hit_message]
 
-        if not await self.logfile.a_exists():  # type: ignore
+        if not await self.logfile.a_exists():
             return []
 
         if not self.handler and not isinstance(self.logfile, CloudPath):
-            self.handler = await self.logfile.a_open().__aenter__()
+            self.handler = await self.logfile.a_open("r").__aenter__()
 
         if not isinstance(self.logfile, CloudPath):
-            content = self.residue + await self.handler.read()
+            content: str = self.residue + await self.handler.read()
         else:
-            async with self.logfile.a_open("r") as f:  # type: ignore
+            async with self.logfile.a_open("r") as f:
                 await f.seek(self._pos)
-                content = self.residue + await f.read()
+                content: str = self.residue + str(await f.read())
                 self._pos = await f.tell()
 
         has_residue = content.endswith("\n")
@@ -327,7 +327,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
         if job.index not in self.populators:
             poplog_max = job.proc.plugin_opts.get("poplog_max", 0)
             self.populators[job.index] = LogsPopulator(
-                logfile,  # type: ignore
+                logfile,
                 max=poplog_max,
                 hit_message=(
                     f"Max messages reached ({poplog_max}), "
