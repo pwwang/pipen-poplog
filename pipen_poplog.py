@@ -3,12 +3,11 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 
-import os
 import re
 import logging
 from pathlib import Path
 from contextlib import suppress
-from yunpath import AnyPath, CloudPath
+from panpath import PanPath, CloudPath
 from pipen.pluginmgr import plugin
 from pipen.utils import get_logger
 
@@ -73,7 +72,7 @@ class LogsPopulator:
     Methods:
         increment_counter(n: int = 1) -> None:
             Increments the counter by a specified value (default is 1).
-        max_hit() -> bool:
+        max_hit -> bool:
             Returns True if the maximum number of log lines has been reached,
             otherwise False.
         populate() -> list[str]:
@@ -91,6 +90,7 @@ class LogsPopulator:
         "max",
         "hit_message",
         "_max_hit",
+        "_pos",
     )
 
     def __init__(
@@ -99,21 +99,23 @@ class LogsPopulator:
         max: int = 0,
         hit_message: str = "max messages reached",
     ) -> None:
-        self.logfile = AnyPath(logfile) if isinstance(logfile, str) else logfile
+        self.logfile = PanPath(logfile) if isinstance(logfile, str) else logfile
         self.handler = None
         self.residue = ""
         self.counter = 0
         self.max = max
         self.hit_message = hit_message
         self._max_hit = False
+        self._pos = 0
 
     def increment_counter(self, n: int = 1) -> None:
         self.counter += n
 
+    @property
     def max_hit(self) -> bool:
         return self._max_hit
 
-    def populate(self) -> list[str]:
+    async def populate(self) -> list[str]:
         if self._max_hit:
             return []
 
@@ -121,20 +123,20 @@ class LogsPopulator:
             self._max_hit = True
             return [self.hit_message]
 
-        if not self.logfile.exists():  # type: ignore
+        if not await self.logfile.a_exists():  # type: ignore
             return []
 
-        if isinstance(self.logfile, CloudPath):
-            self.logfile._refresh_cache(force_overwrite_from_cloud=True)
+        if not self.handler and not isinstance(self.logfile, CloudPath):
+            self.handler = await self.logfile.a_open().__aenter__()
 
-        if not self.handler:
-            self.handler = self.logfile.open()  # type: ignore
+        if not isinstance(self.logfile, CloudPath):
+            content = self.residue + await self.handler.read()
+        else:
+            async with self.logfile.a_open("r") as f:  # type: ignore
+                await f.seek(self._pos)
+                content = self.residue + await f.read()
+                self._pos = await f.tell()
 
-        if isinstance(self.logfile, CloudPath):
-            # force handler to re-read the file for cloud files
-            # they were downloaded by _refresh_cache
-            self.handler.seek(self.handler.tell())
-        content = self.residue + self.handler.read()
         has_residue = content.endswith("\n")
         lines = content.splitlines()
 
@@ -145,10 +147,10 @@ class LogsPopulator:
 
         return lines
 
-    def __del__(self):
-        if self.handler:
-            with suppress(Exception):
-                self.handler.close()
+    async def destroy(self) -> None:
+        if self.handler and not isinstance(self.logfile, CloudPath):
+            await self.handler.close()
+            self.handler = None
 
 
 class PipenPoplogPlugin(metaclass=Singleton):
@@ -179,7 +181,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
             line = populator.residue
             populator.residue = ""
 
-            if populator.max_hit():
+            if populator.max_hit:
                 return
 
             match = poplog_pattern.match(line)
@@ -190,7 +192,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
             job.log(level, msg, limit_indicator=False, logger=logger)
-            self._flush_hanlders()
+            # self._flush_hanlders()
 
             # count only when level is larger than poplog_loglevel
             levelno = logging._nameToLevel.get(level.upper(), 0)
@@ -201,86 +203,87 @@ class PipenPoplogPlugin(metaclass=Singleton):
             ):
                 populator.increment_counter()
 
-    def _is_remote_filesystem(self, path: str) -> bool:
-        """Check if a path is on a remote/network filesystem.
+    # async def _is_remote_filesystem(self, path: str) -> bool:
+    #     """Check if a path is on a remote/network filesystem.
 
-        Remote filesystems may require explicit flushing to ensure data is
-        written promptly. This includes NFS, FUSE-based cloud storage (like
-        GCS, S3), SMB/CIFS, and other network filesystems.
+    #     Remote filesystems may require explicit flushing to ensure data is
+    #     written promptly. This includes NFS, FUSE-based cloud storage (like
+    #     GCS, S3), SMB/CIFS, and other network filesystems.
 
-        Args:
-            path: The file path to check
+    #     Args:
+    #         path: The file path to check
 
-        Returns:
-            True if the path is on a remote/network filesystem
-        """
-        try:
-            # Get the real path to handle symlinks
-            real_path = os.path.realpath(path)
+    #     Returns:
+    #         True if the path is on a remote/network filesystem
+    #     """
+    #     ppath = PanPath(path)
+    #     try:
+    #         # Get the real path to handle symlinks
+    #         real_path = await ppath.a_resolve()
 
-            # Read /proc/mounts to find the filesystem type
-            # This is Linux-specific but works in most environments
-            with open('/proc/mounts', 'r') as f:
-                mounts = f.readlines()
+    #         # Read /proc/mounts to find the filesystem type
+    #         # This is Linux-specific but works in most environments
+    #         async with PanPath('/proc/mounts').a_open('r') as f:
+    #             mounts = await f.readlines()
 
-            # Find the best matching mount point (longest match)
-            best_match_fs = None
-            best_match_len = 0
+    #         # Find the best matching mount point (longest match)
+    #         best_match_fs = None
+    #         best_match_len = 0
 
-            for line in mounts:
-                parts = line.split()
-                if len(parts) < 3:
-                    continue
-                mount_point = parts[1]
-                fs_type = parts[2]
+    #         for line in mounts:
+    #             parts = line.split()
+    #             if len(parts) < 3:
+    #                 continue
+    #             mount_point = parts[1]
+    #             fs_type = parts[2]
 
-                # Check if the path starts with this mount point
-                if real_path.startswith(mount_point):
-                    if len(mount_point) > best_match_len:
-                        best_match_fs = fs_type
-                        best_match_len = len(mount_point)
+    #             # Check if the path starts with this mount point
+    #             if str(real_path).startswith(mount_point):
+    #                 if len(mount_point) > best_match_len:
+    #                     best_match_fs = fs_type
+    #                     best_match_len = len(mount_point)
 
-            if not best_match_fs:
-                return False
+    #         if not best_match_fs:
+    #             return False
 
-            # List of filesystem types that are typically remote/network/cloud
-            # and may need explicit flushing
-            remote_fs_types = {
-                'nfs', 'nfs4',  # NFS
-                'cifs', 'smb', 'smbfs',  # SMB/CIFS
-                'fuse', 'fuseblk', 'fusectl',  # FUSE (cloud storage)
-                'gcs', 'gcsfuse',  # Google Cloud Storage
-                's3fs', 's3',  # S3
-                'afs',  # Andrew File System
-                'coda',  # Coda distributed file system
-                'ocfs2',  # Oracle Cluster File System
-                'glusterfs',  # GlusterFS
-                'lustre',  # Lustre
-                'davfs',  # WebDAV
-            }
+    #         # List of filesystem types that are typically remote/network/cloud
+    #         # and may need explicit flushing
+    #         remote_fs_types = {
+    #             'nfs', 'nfs4',  # NFS
+    #             'cifs', 'smb', 'smbfs',  # SMB/CIFS
+    #             'fuse', 'fuseblk', 'fusectl',  # FUSE (cloud storage)
+    #             'gcs', 'gcsfuse',  # Google Cloud Storage
+    #             's3fs', 's3',  # S3
+    #             'afs',  # Andrew File System
+    #             'coda',  # Coda distributed file system
+    #             'ocfs2',  # Oracle Cluster File System
+    #             'glusterfs',  # GlusterFS
+    #             'lustre',  # Lustre
+    #             'davfs',  # WebDAV
+    #         }
 
-            # Check exact match
-            if best_match_fs in remote_fs_types:
-                return True
+    #         # Check exact match
+    #         if best_match_fs in remote_fs_types:
+    #             return True
 
-            # Check if it's a FUSE variant (e.g., fuse.s3fs, fuse.gcsfuse)
-            if best_match_fs.startswith('fuse.'):
-                return True
+    #         # Check if it's a FUSE variant (e.g., fuse.s3fs, fuse.gcsfuse)
+    #         if best_match_fs.startswith('fuse.'):
+    #             return True
 
-            return False
-        except Exception:
-            # If we can't determine the filesystem type, be conservative
-            # and assume it might be remote if it's under common mount points
-            return path.startswith('/mnt') or path.startswith('/mount')
+    #         return False
+    #     except Exception:
+    #         # If we can't determine the filesystem type, be conservative
+    #         # and assume it might be remote if it's under common mount points
+    #         return path.startswith('/mnt') or path.startswith('/mount')
 
-    def _flush_hanlders(self):
-        if not self.flushing_handlers:
-            return
+    # def _flush_hanlders(self):
+    #     if not self.flushing_handlers:
+    #         return
 
-        for h in self.flushing_handlers:
-            with suppress(Exception):
-                h.stream.flush()
-                os.fsync(h.stream.fileno())
+    #     for h in self.flushing_handlers:
+    #         with suppress(Exception):
+    #             h.stream.flush()
+    #             os.fsync(h.stream.fileno())
 
     @plugin.impl
     async def on_init(self, pipen: Pipen):
@@ -296,19 +299,19 @@ class PipenPoplogPlugin(metaclass=Singleton):
     async def on_start(self, pipen: Pipen):
         """Set the log level"""
         logger.setLevel(pipen.config.plugin_opts.poplog_loglevel.upper())
-        # Find handlers to flush if they are file handlers from remote path
-        base_logger = getattr(logger, "logger", logger)
-        for h in getattr(base_logger, "handlers", []):
-            stream = getattr(h, "stream", None)
-            if (
-                not stream
-                or not hasattr(stream, "name")
-                or not isinstance(stream.name, str)
-                or not self._is_remote_filesystem(stream.name)
-            ):
-                continue
+        # # Find handlers to flush if they are file handlers from remote path
+        # base_logger = getattr(logger, "logger", logger)
+        # for h in getattr(base_logger, "handlers", []):
+        #     stream = getattr(h, "stream", None)
+        #     if (
+        #         not stream
+        #         or not hasattr(stream, "name")
+        #         or not isinstance(stream.name, str)
+        #         or not await self._is_remote_filesystem(stream.name)
+        #     ):
+        #         continue
 
-            self.flushing_handlers.append(h)
+        #     self.flushing_handlers.append(h)
 
     @plugin.impl
     async def on_job_started(self, job: Job):
@@ -344,10 +347,9 @@ class PipenPoplogPlugin(metaclass=Singleton):
         poplog_pattern = proc.plugin_opts.get("poplog_pattern", PATTERN)
         poplog_pattern = re.compile(poplog_pattern)
 
-        lines = populator.populate()
-
+        lines = await populator.populate()
         for line in lines:
-            if populator.max_hit():
+            if populator.max_hit:
                 job.log("warning", line, limit_indicator=False, logger=logger)
                 break
 
@@ -366,7 +368,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
                 populator.increment_counter()
 
         # flush all handlers
-        self._flush_hanlders()
+        # self._flush_hanlders()
 
     @plugin.impl
     async def on_job_succeeded(self, job: Job):
@@ -389,7 +391,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
     async def on_proc_done(self, proc: Proc, succeeded: bool | str):
         """Clear the populators after the proc is done"""
         for populator in self.populators.values():
-            del populator
+            await populator.destroy()
         self.populators.clear()
 
     @plugin.impl
