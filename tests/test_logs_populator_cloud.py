@@ -38,7 +38,7 @@ async def test_populate_complete_lines(testdir):
     assert result == ["line1", "line2", "line3"]
     populator.increment_counter()
     assert populator.counter == 1
-    assert populator.residue == ""
+    assert populator.residue == b""
 
 
 async def test_populate_incomplete_last_line(testdir):
@@ -53,21 +53,21 @@ async def test_populate_incomplete_last_line(testdir):
     assert result == ["line1", "line2"]
     populator.increment_counter()
     assert populator.counter == 1
-    assert populator.residue == "incomplete"
+    assert populator.residue == b"incomplete"
 
 
 async def test_populate_with_residue_from_previous_read(testdir):
     """Test populate method using residue from previous read."""
     populator = LogsPopulator()
     populator.logfile = testdir / "logfile.log"
-    populator.residue = "partial"
+    populator.residue = b"partial"
     await populator.logfile.a_write_text(" completed\nline2\n")
 
     result = await populator.populate()
     assert result == ["partial completed", "line2"]
     populator.increment_counter()
     assert populator.counter == 1
-    assert populator.residue == ""
+    assert populator.residue == b""
 
 
 async def test_populate_multiple_calls_reuses_handler(testdir):
@@ -97,4 +97,4 @@ async def test_populate_only_residue_no_newlines(testdir):
 
     result = await populator.populate()
     assert result == []
-    assert populator.residue == "no newlines here"
+    assert populator.residue == b"no newlines here"

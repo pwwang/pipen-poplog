@@ -101,7 +101,7 @@ class LogsPopulator:
     ) -> None:
         self.logfile = PanPath(logfile) if isinstance(logfile, str) else logfile
         self.handler = None
-        self.residue: str = ""
+        self.residue = b""
         self.counter = 0
         self.max = max
         self.hit_message = hit_message
@@ -127,25 +127,25 @@ class LogsPopulator:
             return []
 
         if not self.handler and not isinstance(self.logfile, CloudPath):
-            self.handler = await self.logfile.a_open("r").__aenter__()
+            self.handler = await self.logfile.a_open("rb").__aenter__()
 
         if not isinstance(self.logfile, CloudPath):
-            content: str = self.residue + await self.handler.read()
+            content: bytes = self.residue + await self.handler.read()
         else:
-            async with self.logfile.a_open("r") as f:
+            async with self.logfile.a_open("rb") as f:
                 await f.seek(self._pos)
-                content: str = self.residue + str(await f.read())
+                content: bytes = self.residue + await f.read()
                 self._pos = await f.tell()
 
-        has_residue = content.endswith("\n")
+        has_residue = content.endswith(b"\n")
         lines = content.splitlines()
 
         if has_residue or not lines:
-            self.residue = ""
+            self.residue = b""
         else:
             self.residue = lines.pop(-1)
 
-        return lines
+        return [line.decode() for line in lines]
 
     async def destroy(self) -> None:
         if self.handler and not isinstance(self.logfile, CloudPath):
@@ -178,8 +178,8 @@ class PipenPoplogPlugin(metaclass=Singleton):
         poplog_pattern = re.compile(job.proc.plugin_opts.get("poplog_pattern", PATTERN))
 
         if populator.residue:
-            line = populator.residue
-            populator.residue = ""
+            line = populator.residue.decode()
+            populator.residue = b""
 
             if populator.max_hit:
                 return

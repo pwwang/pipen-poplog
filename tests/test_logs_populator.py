@@ -12,7 +12,7 @@ class TestLogsPopulator:
         populator = LogsPopulator("/path/to/logfile.log")
         assert populator.logfile.name == "logfile.log"
         assert populator.handler is None
-        assert populator.residue == ""
+        assert populator.residue == b""
         assert populator.counter == 0
 
     def test_init_with_path_object(self):
@@ -21,7 +21,7 @@ class TestLogsPopulator:
         populator = LogsPopulator(path)
         assert populator.logfile == path
         assert populator.handler is None
-        assert populator.residue == ""
+        assert populator.residue == b""
         assert populator.counter == 0
 
     def test_init_with_none(self):
@@ -29,7 +29,7 @@ class TestLogsPopulator:
         populator = LogsPopulator(None)
         assert populator.logfile is None
         assert populator.handler is None
-        assert populator.residue == ""
+        assert populator.residue == b""
         assert populator.counter == 0
 
     async def test_populate_nonexistent_file(self):
@@ -50,7 +50,7 @@ class TestLogsPopulator:
 
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
-        mock_handler.read = AsyncMock(return_value="")
+        mock_handler.read = AsyncMock(return_value=b"")
         mock_handler.__aenter__ = AsyncMock(return_value=mock_handler)
         mock_logfile.a_open = Mock(return_value=mock_handler)
 
@@ -61,11 +61,11 @@ class TestLogsPopulator:
         assert result == []
         populator.increment_counter()
         assert populator.counter == 1
-        assert populator.residue == ""
+        assert populator.residue == b""
 
     async def test_populate_complete_lines(self):
         """Test populate method with complete lines ending with newline."""
-        content = "line1\nline2\nline3\n"
+        content = b"line1\nline2\nline3\n"
         mock_logfile = Mock()
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
@@ -80,11 +80,11 @@ class TestLogsPopulator:
         assert result == ["line1", "line2", "line3"]
         populator.increment_counter()
         assert populator.counter == 1
-        assert populator.residue == ""
+        assert populator.residue == b""
 
     async def test_populate_incomplete_last_line(self):
         """Test populate method with incomplete last line (no trailing newline)."""
-        content = "line1\nline2\nincomplete"
+        content = b"line1\nline2\nincomplete"
         mock_logfile = Mock()
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
@@ -99,33 +99,33 @@ class TestLogsPopulator:
         assert result == ["line1", "line2"]
         populator.increment_counter()
         assert populator.counter == 1
-        assert populator.residue == "incomplete"
+        assert populator.residue == b"incomplete"
 
     async def test_populate_with_residue_from_previous_read(self):
         """Test populate method using residue from previous read."""
         mock_logfile = Mock()
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
-        mock_handler.read = AsyncMock(return_value=" completed\nline2\n")
+        mock_handler.read = AsyncMock(return_value=b" completed\nline2\n")
         mock_handler.__aenter__ = AsyncMock(return_value=mock_handler)
         mock_logfile.a_open = Mock(return_value=mock_handler)
 
         populator = LogsPopulator()
         populator.logfile = mock_logfile
-        populator.residue = "partial"
+        populator.residue = b"partial"
 
         result = await populator.populate()
         assert result == ["partial completed", "line2"]
         populator.increment_counter()
         assert populator.counter == 1
-        assert populator.residue == ""
+        assert populator.residue == b""
 
     async def test_populate_multiple_calls_reuses_handler(self):
         """Test that multiple populate calls reuse the same file handler."""
         mock_logfile = Mock()
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
-        mock_handler.read = AsyncMock(return_value="new content\n")
+        mock_handler.read = AsyncMock(return_value=b"new content\n")
         mock_handler.__aenter__ = AsyncMock(return_value=mock_handler)
         mock_logfile.a_open = Mock(return_value=mock_handler)
 
@@ -145,7 +145,7 @@ class TestLogsPopulator:
 
     async def test_populate_only_residue_no_newlines(self):
         """Test populate with content that has no newlines."""
-        content = "no newlines here"
+        content = b"no newlines here"
         mock_logfile = Mock()
         mock_logfile.a_exists = AsyncMock(return_value=True)
         mock_handler = Mock()
@@ -158,7 +158,7 @@ class TestLogsPopulator:
 
         result = await populator.populate()
         assert result == []
-        assert populator.residue == "no newlines here"
+        assert populator.residue == b"no newlines here"
 
     async def test_destroy_closes_handler(self):
         """Test that destructor closes the file handler."""
