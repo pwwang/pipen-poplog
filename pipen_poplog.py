@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from pipen import Pipen, Proc
     from pipen.job import Job
 
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 PATTERN = r"\[PIPEN-POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)"
 logger = get_logger("poplog")
 levels = {"warn": "warning"}
@@ -134,7 +134,7 @@ class LogsPopulator:
         else:
             async with self.logfile.a_open("rb") as f:
                 await f.seek(self._pos)
-                content: bytes = self.residue + await f.read()
+                content: bytes = self.residue + await f.read()  # type: ignore
                 self._pos = await f.tell()
 
         has_residue = content.endswith(b"\n")
