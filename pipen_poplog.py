@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from pipen import Pipen, Proc
     from pipen.job import Job
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 PATTERN = r"\[PIPEN-POPLOG\]\[(?P<level>\w+?)\] (?P<message>.*)"
 logger = get_logger("poplog")
 levels = {"warn": "warning"}
@@ -195,7 +195,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
             # Read /proc/mounts to find the filesystem type
             # This is Linux-specific but works in most environments
             async with PanPath("/proc/mounts").a_open("r") as f:
-                mounts = await f.readlines()
+                mounts: list[str] = await f.readlines()  # type: ignore
 
             # Find the best matching mount point (longest match)
             best_match_fs = None

@@ -2,14 +2,14 @@
 
 [[package]]
 name = "aiofiles"
-version = "23.2.1"
+version = "25.1.0"
 description = "File support for asyncio."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.9"
 groups = ["main", "examples"]
 files = [
-    {file = "aiofiles-23.2.1-py3-none-any.whl", hash = "sha256:19297512c647d4b27a2cf7c34caa7e405c0d60b5560618a29a9fe027b18b0107"},
-    {file = "aiofiles-23.2.1.tar.gz", hash = "sha256:84ec2218d8419404abcb9f0c02df3f34c6e0a68ed41072acfb1cef5cbc29051a"},
+    {file = "aiofiles-25.1.0-py3-none-any.whl", hash = "sha256:abe311e527c862958650f9438e859c1fa7568a141b22abcd015e120e86a85695"},
+    {file = "aiofiles-25.1.0.tar.gz", hash = "sha256:a8d728f0a29de45dc521f18f07297428d56992a742f0cd2701ba86e44d23d5b2"},
 ]
 
 [[package]]
@@ -213,14 +213,14 @@ test = ["coverage", "mypy", "pexpect", "ruff", "wheel"]
 
 [[package]]
 name = "argx"
-version = "0.4.1"
+version = "0.4.2"
 description = "Super-charged argparse for python"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main", "examples"]
 files = [
-    {file = "argx-0.4.1-py3-none-any.whl", hash = "sha256:30eba009c5f4fa67b8024db614f0488ba3c732b726e0b78c1b16357b71c26667"},
-    {file = "argx-0.4.1.tar.gz", hash = "sha256:42e1ba973799071e88ce724220b33009411e97b6c70cbea5220c70f91dbccdd3"},
+    {file = "argx-0.4.2-py3-none-any.whl", hash = "sha256:fd1fdde7b5ae72faa74cd9bce20caa017e4589d69bdf4c33ed57bc4df49ffb3f"},
+    {file = "argx-0.4.2.tar.gz", hash = "sha256:30688135adbf5fa179619731e9525d31fbb1da4db3dd6a8505d475162e93c8f4"},
 ]
 
 [package.dependencies]
@@ -228,6 +228,7 @@ python-simpleconf = ">=0.8,<0.9"
 
 [package.extras]
 anypath = ["panpath (>=0.4,<0.5)"]
+panpath = ["panpath (>=0.4,<0.5)"]
 
 [[package]]
 name = "async-timeout"
@@ -410,18 +411,18 @@ files = [
 
 [[package]]
 name = "cloudsh"
-version = "0.3.6"
+version = "0.3.7"
 description = "A Python CLI wrapping common Linux commands for local/cloud files."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["examples"]
 files = [
-    {file = "cloudsh-0.3.6-py3-none-any.whl", hash = "sha256:b346e5fc16b92b5ce9aa8c64578ffe2ddf81a0bab91a511ceb9fd87477cf2207"},
-    {file = "cloudsh-0.3.6.tar.gz", hash = "sha256:ec8c4880afdc6a8d856dca6f82259900e90c9fa96d73b9901d873360f5ade105"},
+    {file = "cloudsh-0.3.7-py3-none-any.whl", hash = "sha256:1a5e898af6599936171a95b6051401a1b93a538e7fba1bc0f7cf102d47d93d7c"},
+    {file = "cloudsh-0.3.7.tar.gz", hash = "sha256:7505ad81ddb03e52279a77621541503e54c517cc80a59eb6cbf7e511a77f6ad3"},
 ]
 
 [package.dependencies]
-aiofiles = ">=23.0.0,<24.0.0"
+aiofiles = ">=23.0.0"
 argcomplete = ">=3.5.3,<4.0.0"
 argx = ">=0.4,<0.5"
 gcloud-aio-storage = {version = ">=9.5", optional = true, markers = "extra == \"gs\" or extra == \"gcs\" or extra == \"all\""}
@@ -1948,15 +1949,21 @@ s3 = ["boto3 (>=1.20.0)"]
 
 [[package]]
 name = "pathspec"
-version = "0.12.1"
+version = "1.0.1"
 description = "Utility library for gitignore style pattern matching of file paths."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pathspec-0.12.1-py3-none-any.whl", hash = "sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08"},
-    {file = "pathspec-0.12.1.tar.gz", hash = "sha256:a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712"},
+    {file = "pathspec-1.0.1-py3-none-any.whl", hash = "sha256:8870061f22c58e6d83463cfce9a7dd6eca0512c772c1001fb09ac64091816721"},
+    {file = "pathspec-1.0.1.tar.gz", hash = "sha256:e2769b508d0dd47b09af6ee2c75b2744a2cb1f474ae4b1494fd6a1b7a841613c"},
 ]
+
+[package.extras]
+hyperscan = ["hyperscan (>=0.7)"]
+optional = ["typing-extensions (>=4)"]
+re2 = ["google-re2 (>=1.1)"]
+tests = ["pytest (>=9)", "typing-extensions (>=4.15)"]
 
 [[package]]
 name = "pipda"
@@ -2371,14 +2378,14 @@ cli = ["click (>=5.0)"]
 
 [[package]]
 name = "python-simpleconf"
-version = "0.8.0"
+version = "0.8.2"
 description = "Simple configuration management with python."
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["main", "examples"]
 files = [
-    {file = "python_simpleconf-0.8.0-py3-none-any.whl", hash = "sha256:2f8b550aa7d9b871516a8264541870036492367d2907c265aa8297d4297558cd"},
-    {file = "python_simpleconf-0.8.0.tar.gz", hash = "sha256:c96d51fd635a410f295c65ddccf5023a24cb1d35df69654a98874a0d37a67791"},
+    {file = "python_simpleconf-0.8.2-py3-none-any.whl", hash = "sha256:8462229665207389fab5797104003d52f8c1d6d9d75c0447c5182169f80fdf30"},
+    {file = "python_simpleconf-0.8.2.tar.gz", hash = "sha256:21f9e68865ed6762a641db26900a300aee86149ab79e3d430f7811d7fcb4c47e"},
 ]
 
 [package.dependencies]
