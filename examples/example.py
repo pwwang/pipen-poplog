@@ -10,7 +10,7 @@ class TestLogsPopulator(Proc):
     script = """
         echo [POPLOG][INFO] 1
         sleep 1
-        echo [POPLOG][WARNING] 2
+        echo [POPLOG][WARNING] 2 %s
         sleep 1
         echo 3
         sleep 1

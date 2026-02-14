@@ -303,6 +303,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
             level = match.group("level").lower()
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
+            msg = msg.replace("%", "%%")
             job.log(level, msg, limit_indicator=False, logger=logger)
             self._flush_hanlders(poplog_flush_interval)
 
@@ -390,6 +391,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
         lines = await populator.populate()
         for line in lines:
             if populator.max_hit:
+                line = line.replace("%", "%%")
                 job.log("warning", line, limit_indicator=False, logger=logger)
                 break
 
@@ -400,6 +402,8 @@ class PipenPoplogPlugin(metaclass=Singleton):
             level = match.group("level").lower()
             level = levels.get(level, level)
             msg = match.group("message").rstrip()
+            # escape % in the message to avoid formatting issues in logger
+            msg = msg.replace("%", "%%")
             job.log(level, msg, limit_indicator=False, logger=logger)
 
             # count only when level is larger than poplog_loglevel
