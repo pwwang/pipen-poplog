@@ -167,12 +167,18 @@ class PipenPoplogPlugin(metaclass=Singleton):
     # flushing handlers: The handlers of the logger that need to be flushed
     # this is to ensure that the logs are written to the file and uploaded if
     # using cloud files for logging
-    __slots__ = ("populators", "flushing_handlers", "_last_flush_time")
+    __slots__ = (
+        "populators",
+        "flushing_handlers",
+        "_last_flush_time",
+        "_job_started_populating",
+    )
 
     def __init__(self) -> None:
         self.populators: dict[int, LogsPopulator] = {}
         self.flushing_handlers: set[logging.Handler] = set()
         self._last_flush_time: float = 0.0
+        self._job_started_populating: bool = False
 
     async def _is_mounted_filesystem(self, path: str) -> bool:
         """Check if a path is on a remote/network filesystem.
@@ -322,7 +328,7 @@ class PipenPoplogPlugin(metaclass=Singleton):
         # default options
         pipen.config.plugin_opts.setdefault("poplog_loglevel", "info")
         pipen.config.plugin_opts.setdefault("poplog_pattern", PATTERN)
-        pipen.config.plugin_opts.setdefault("poplog_jobs", [0])
+        pipen.config.plugin_opts.setdefault("poplog_jobs", [])
         pipen.config.plugin_opts.setdefault("poplog_source", "stdout")
         pipen.config.plugin_opts.setdefault("poplog_max", 0)
         pipen.config.plugin_opts.setdefault(
@@ -350,10 +356,27 @@ class PipenPoplogPlugin(metaclass=Singleton):
             self.flushing_handlers.add(h)
 
     @plugin.impl
+    def on_proc_create(self, proc: Proc):
+        """Cluster first running job index"""
+        self._job_started_populating = False
+
+    @plugin.impl
     async def on_job_started(self, job: Job):
         """Initialize the populator for the job"""
-        if job.index not in job.proc.plugin_opts.get("poplog_jobs", [0]):
+        # if job.index not in job.proc.plugin_opts.get("poplog_jobs", [0]):
+        #     return
+        poplog_jobs = job.proc.plugin_opts.get("poplog_jobs", [])
+        if not isinstance(poplog_jobs, (list, tuple)):
+            poplog_jobs = [poplog_jobs]
+
+        if poplog_jobs and job.index not in poplog_jobs:
             return
+
+        if not poplog_jobs and self._job_started_populating:
+            return
+
+        if not poplog_jobs and not self._job_started_populating:
+            self._job_started_populating = True
 
         if job.proc.plugin_opts.poplog_source == "stdout":
             logfile = job.stdout_file
